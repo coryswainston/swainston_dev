@@ -6,10 +6,16 @@
     <title>Swainston Software Development</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="hero">
-        <h1>Swainston Software Development</h1>
+        <h1 class="logo">
+            <span class="logo-main">Swainston</span>
+            <span class="logo-sub">Software Development, LLC</span>
+        </h1>
         <p>Simple, well-crafted apps</p>
     </div>
 
@@ -41,7 +47,119 @@
 
     <footer>
         <p>&copy; 2025 Swainston Software Development LLC</p>
-        <p><a href="mailto:cory@swainston.dev">cory@swainston.dev</a></p>
+        <p><a href="support.html">Contact</a></p>
     </footer>
+
+    <canvas id="wave"></canvas>
+    <script>
+    (function() {
+        const canvas = document.getElementById('wave');
+        const ctx = canvas.getContext('2d');
+        let w, h, cols, rows, mouse;
+        const SPACING = 32;
+        const DOT_R = 1.2;
+        const COLOR = [15, 76, 129]; // Classic Blue
+
+        mouse = { x: -9999, y: -9999 };
+        window.addEventListener('mousemove', function(e) {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mouseout', function() {
+            mouse.x = -9999;
+            mouse.y = -9999;
+        });
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            cols = Math.ceil(w / SPACING) + 1;
+            rows = Math.ceil(h / SPACING) + 1;
+        }
+
+        function draw(t) {
+            ctx.clearRect(0, 0, w, h);
+            const time = t * 0.001;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const baseX = col * SPACING;
+                    const baseY = row * SPACING;
+
+                    const wave = Math.sin(col * 0.3 + time * 1.2) * 6
+                               + Math.cos(row * 0.25 + time * 0.8) * 6
+                               + Math.sin((col + row) * 0.2 + time) * 4;
+
+                    const dx = baseX - mouse.x;
+                    const dy = baseY - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const mouseRadius = 150;
+                    let mx = 0, my = 0;
+                    if (dist < mouseRadius && dist > 0) {
+                        const force = (1 - dist / mouseRadius) * 25;
+                        mx = (dx / dist) * force;
+                        my = (dy / dist) * force;
+                    }
+
+                    const x = baseX + mx;
+                    const y = baseY + wave + my;
+                    const alpha = 0.15 + Math.abs(wave) * 0.015;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, DOT_R, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(' + COLOR.join(',') + ',' + alpha + ')';
+                    ctx.fill();
+
+                    if (col < cols - 1) {
+                        const nx = (col + 1) * SPACING;
+                        const nWave = Math.sin((col + 1) * 0.3 + time * 1.2) * 6
+                                    + Math.cos(row * 0.25 + time * 0.8) * 6
+                                    + Math.sin((col + 1 + row) * 0.2 + time) * 4;
+                        const ndx = nx - mouse.x;
+                        const ndy = (row * SPACING + nWave) - mouse.y;
+                        const nDist = Math.sqrt(ndx * ndx + ndy * ndy);
+                        let nmx = 0, nmy = 0;
+                        if (nDist < mouseRadius && nDist > 0) {
+                            const nf = (1 - nDist / mouseRadius) * 25;
+                            nmx = (ndx / nDist) * nf;
+                            nmy = (ndy / nDist) * nf;
+                        }
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(nx + nmx, row * SPACING + nWave + nmy);
+                        ctx.strokeStyle = 'rgba(' + COLOR.join(',') + ',' + (alpha * 0.5) + ')';
+                        ctx.stroke();
+                    }
+                    if (row < rows - 1) {
+                        const ny = (row + 1) * SPACING;
+                        const nWave = Math.sin(col * 0.3 + time * 1.2) * 6
+                                    + Math.cos((row + 1) * 0.25 + time * 0.8) * 6
+                                    + Math.sin((col + row + 1) * 0.2 + time) * 4;
+                        const ndx = baseX - mouse.x;
+                        const ndy = (ny + nWave) - mouse.y;
+                        const nDist = Math.sqrt(ndx * ndx + ndy * ndy);
+                        let nmx = 0, nmy = 0;
+                        if (nDist < mouseRadius && nDist > 0) {
+                            const nf = (1 - nDist / mouseRadius) * 25;
+                            nmx = (ndx / nDist) * nf;
+                            nmy = (ndy / nDist) * nf;
+                        }
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(baseX + nmx, ny + nWave + nmy);
+                        ctx.strokeStyle = 'rgba(' + COLOR.join(',') + ',' + (alpha * 0.5) + ')';
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        requestAnimationFrame(draw);
+    })();
+    </script>
 </body>
 </html>
