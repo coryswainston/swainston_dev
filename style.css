@@ -18,8 +18,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Wave mesh background */
-#wave {
+/* 3D world background */
+#world {
   position: fixed;
   top: 0;
   left: 0;
@@ -29,7 +29,7 @@ body {
   pointer-events: none;
 }
 
-body > *:not(#wave):not(script) {
+body > *:not(#world):not(script) {
   position: relative;
   z-index: 1;
 }

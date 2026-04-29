@@ -50,114 +50,229 @@
         <p><a href="support.html">Contact</a></p>
     </footer>
 
-    <canvas id="wave"></canvas>
+    <canvas id="world"></canvas>
     <script>
     (function() {
-        const canvas = document.getElementById('wave');
+        const canvas = document.getElementById('world');
         const ctx = canvas.getContext('2d');
-        let w, h, cols, rows, mouse;
-        const SPACING = 32;
-        const DOT_R = 1.2;
-        const COLOR = [15, 76, 129]; // Classic Blue
+        let w, h;
 
-        mouse = { x: -9999, y: -9999 };
-        window.addEventListener('mousemove', function(e) {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-        window.addEventListener('mouseout', function() {
-            mouse.x = -9999;
-            mouse.y = -9999;
-        });
+        const HORIZON = 0.38;
+        const GREEN = [40, 140, 65];
+        const BLUE = [15, 76, 129];
+        const CLOUD_WHITE = [255, 255, 255];
+
+        const GROUND_SPEED = 0.15;
+
+        // --- CLOUDS ---
+        const clouds = [];
+        const CLOUD_COUNT = 6;
+
+        function makeCloud(randomZ) {
+            const puffs = [];
+            // dense core puffs
+            const coreCount = Math.floor(Math.random() * 14) + 14;
+            for (let i = 0; i < coreCount; i++) {
+                puffs.push({
+                    ox: (Math.random() - 0.5) * 0.6,
+                    oy: (Math.random() - 0.5) * 0.12,
+                    r: Math.random() * 0.1 + 0.08,
+                    core: true
+                });
+            }
+            // outer puffs for shape
+            const outerCount = Math.floor(Math.random() * 14) + 10;
+            for (let i = 0; i < outerCount; i++) {
+                puffs.push({
+                    ox: (Math.random() - 0.5) * 1.0,
+                    oy: (Math.random() - 0.5) * 0.18,
+                    r: Math.random() * 0.12 + 0.06,
+                    core: false
+                });
+            }
+            return {
+                x: (Math.random() - 0.5) * 2.0,
+                y: -(Math.random() * 0.4 + 0.55),
+                z: randomZ ? Math.random() * 10 + 2 : 10 + Math.random() * 3,
+                puffs: puffs
+            };
+        }
+
+        function initClouds() {
+            clouds.length = 0;
+            for (let i = 0; i < CLOUD_COUNT; i++) {
+                clouds.push(makeCloud(true));
+            }
+        }
 
         function resize() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
-            cols = Math.ceil(w / SPACING) + 1;
-            rows = Math.ceil(h / SPACING) + 1;
+        }
+
+        function project(x3, y3, z3) {
+            const fov = 1.5;
+            const scale = fov / z3;
+            return {
+                x: w / 2 + x3 * scale * w * 0.5,
+                y: h * HORIZON + y3 * scale * h * 0.6,
+                s: scale
+            };
         }
 
         function draw(t) {
             ctx.clearRect(0, 0, w, h);
             const time = t * 0.001;
 
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const baseX = col * SPACING;
-                    const baseY = row * SPACING;
+            // --- SKY GRADIENT ---
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, h * HORIZON);
+            skyGrad.addColorStop(0, 'rgba(15, 76, 129, 0.12)');
+            skyGrad.addColorStop(1, 'rgba(15, 76, 129, 0.04)');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, w, h * HORIZON);
 
-                    const wave = Math.sin(col * 0.3 + time * 1.2) * 6
-                               + Math.cos(row * 0.25 + time * 0.8) * 6
-                               + Math.sin((col + row) * 0.2 + time) * 4;
+            // --- MOUNTAINS ---
+            const mBase = h * (HORIZON + 0.015);
 
-                    const dx = baseX - mouse.x;
-                    const dy = baseY - mouse.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    const mouseRadius = 150;
-                    let mx = 0, my = 0;
-                    if (dist < mouseRadius && dist > 0) {
-                        const force = (1 - dist / mouseRadius) * 25;
-                        mx = (dx / dist) * force;
-                        my = (dy / dist) * force;
-                    }
+            // back range (farther, lighter)
+            ctx.beginPath();
+            ctx.moveTo(0, mBase);
+            const mSteps = 200;
+            for (let i = 0; i <= mSteps; i++) {
+                const mx = (i / mSteps) * w;
+                const nx = i / mSteps * 12;
+                const peak = Math.abs(Math.sin(nx * 0.7)) * 0.12
+                           + Math.abs(Math.sin(nx * 1.3 + 2)) * 0.06
+                           + Math.sin(nx * 2.7 + 5) * 0.025
+                           + Math.sin(nx * 5.1 + 1) * 0.012;
+                ctx.lineTo(mx, mBase - peak * h);
+            }
+            ctx.lineTo(w, mBase);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(15, 76, 129, 0.08)';
+            ctx.fill();
 
-                    const x = baseX + mx;
-                    const y = baseY + wave + my;
-                    const alpha = 0.15 + Math.abs(wave) * 0.015;
+            // front range (closer, darker)
+            ctx.beginPath();
+            ctx.moveTo(0, mBase);
+            for (let i = 0; i <= mSteps; i++) {
+                const mx = (i / mSteps) * w;
+                const nx = i / mSteps * 10;
+                const peak = Math.abs(Math.sin(nx * 0.9 + 3)) * 0.08
+                           + Math.abs(Math.sin(nx * 1.7 + 1)) * 0.04
+                           + Math.sin(nx * 3.3 + 4) * 0.018
+                           + Math.sin(nx * 6.2 + 2) * 0.008;
+                ctx.lineTo(mx, mBase - peak * h);
+            }
+            ctx.lineTo(w, mBase);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(15, 76, 129, 0.12)';
+            ctx.fill();
 
+            // --- GROUND GRADIENT ---
+            const groundGrad = ctx.createLinearGradient(0, h * HORIZON, 0, h);
+            groundGrad.addColorStop(0, 'rgba(40, 140, 65, 0.02)');
+            groundGrad.addColorStop(0.3, 'rgba(40, 140, 65, 0.04)');
+            groundGrad.addColorStop(1, 'rgba(40, 140, 65, 0.06)');
+            ctx.fillStyle = groundGrad;
+            ctx.fillRect(0, h * HORIZON, w, h * (1 - HORIZON));
+
+            // --- GROUND GRID ---
+            const gridRows = 200;
+            const gridCols = 1000;
+            const zMin = 0.1;
+            const zMax = 22;
+            const zRange = zMax - zMin;
+            const scrollOffset = zRange - (time * GROUND_SPEED * 0.8) % zRange;
+
+            for (let row = 0; row < gridRows; row++) {
+                const t_row = row / gridRows;
+                const baseZ = zMin * Math.pow(zMax / zMin, t_row);
+                const z = zMin + ((baseZ - zMin + scrollOffset) % zRange);
+                const fade = Math.max(0.3, (z - zMin) / zRange);
+                const hillY = 0.35 + Math.sin(z * 1.5 + time * 0.4) * 0.015;
+
+                // horizontal lines
+                const lp = project(-12, hillY, z);
+                const rp = project(12, hillY, z);
+                if (lp.y > h * HORIZON) {
                     ctx.beginPath();
-                    ctx.arc(x, y, DOT_R, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(' + COLOR.join(',') + ',' + alpha + ')';
-                    ctx.fill();
+                    ctx.moveTo(lp.x, lp.y);
+                    ctx.lineTo(rp.x, rp.y);
+                    ctx.strokeStyle = 'rgba(' + GREEN.join(',') + ',' + (0.35 * fade) + ')';
+                    ctx.lineWidth = Math.max(0.5, lp.s * 2.5);
+                    ctx.stroke();
+                }
 
-                    if (col < cols - 1) {
-                        const nx = (col + 1) * SPACING;
-                        const nWave = Math.sin((col + 1) * 0.3 + time * 1.2) * 6
-                                    + Math.cos(row * 0.25 + time * 0.8) * 6
-                                    + Math.sin((col + 1 + row) * 0.2 + time) * 4;
-                        const ndx = nx - mouse.x;
-                        const ndy = (row * SPACING + nWave) - mouse.y;
-                        const nDist = Math.sqrt(ndx * ndx + ndy * ndy);
-                        let nmx = 0, nmy = 0;
-                        if (nDist < mouseRadius && nDist > 0) {
-                            const nf = (1 - nDist / mouseRadius) * 25;
-                            nmx = (ndx / nDist) * nf;
-                            nmy = (ndy / nDist) * nf;
+                // vertical lines
+                if (row < gridRows - 1) {
+                    const nt_row = (row + 1) / gridRows;
+                    const nBaseZ = zMin * Math.pow(zMax / zMin, nt_row);
+                    const nz = zMin + ((nBaseZ - zMin + scrollOffset) % zRange);
+                    const nHill = 0.35 + Math.sin(nz * 1.5 + time * 0.4) * 0.015;
+                    for (let col = 0; col <= gridCols; col++) {
+                        const x = (col / gridCols - 0.5) * 24;
+                        const p1 = project(x, hillY, z);
+                        const p2 = project(x, nHill, nz);
+                        if (p1.y > h * HORIZON) {
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = 'rgba(' + GREEN.join(',') + ',' + (0.25 * fade) + ')';
+                            ctx.lineWidth = Math.max(0.3, p1.s * 1.8);
+                            ctx.stroke();
                         }
-                        ctx.beginPath();
-                        ctx.moveTo(x, y);
-                        ctx.lineTo(nx + nmx, row * SPACING + nWave + nmy);
-                        ctx.strokeStyle = 'rgba(' + COLOR.join(',') + ',' + (alpha * 0.5) + ')';
-                        ctx.stroke();
-                    }
-                    if (row < rows - 1) {
-                        const ny = (row + 1) * SPACING;
-                        const nWave = Math.sin(col * 0.3 + time * 1.2) * 6
-                                    + Math.cos((row + 1) * 0.25 + time * 0.8) * 6
-                                    + Math.sin((col + row + 1) * 0.2 + time) * 4;
-                        const ndx = baseX - mouse.x;
-                        const ndy = (ny + nWave) - mouse.y;
-                        const nDist = Math.sqrt(ndx * ndx + ndy * ndy);
-                        let nmx = 0, nmy = 0;
-                        if (nDist < mouseRadius && nDist > 0) {
-                            const nf = (1 - nDist / mouseRadius) * 25;
-                            nmx = (ndx / nDist) * nf;
-                            nmy = (ndy / nDist) * nf;
-                        }
-                        ctx.beginPath();
-                        ctx.moveTo(x, y);
-                        ctx.lineTo(baseX + nmx, ny + nWave + nmy);
-                        ctx.strokeStyle = 'rgba(' + COLOR.join(',') + ',' + (alpha * 0.5) + ')';
-                        ctx.stroke();
                     }
                 }
             }
 
+            // --- CLOUDS ---
+            for (let i = 0; i < clouds.length; i++) {
+                const c = clouds[i];
+                c.z -= 0.004;
+                if (c.z < 0.3) {
+                    clouds[i] = makeCloud(false);
+                    continue;
+                }
+
+                for (const puff of c.puffs) {
+                    const p = project(c.x + puff.ox, c.y + puff.oy, c.z);
+                    const r = puff.r * p.s * w * 0.8;
+                    const depth = Math.max(0, 1 - c.z / 14);
+
+                    if (r > 1 && p.y < h * (HORIZON + 0.05)) {
+                        // all puffs use gradients, core ones are just more opaque
+                        const edgeAlpha = puff.core ? 0.22 + depth * 0.16 : 0.12 + depth * 0.1;
+                        const grad = ctx.createRadialGradient(p.x, p.y, r * 0.3, p.x, p.y, r);
+                        grad.addColorStop(0, 'rgba(255,255,255,' + edgeAlpha + ')');
+                        grad.addColorStop(0.7, 'rgba(255,255,255,' + (edgeAlpha * 0.4) + ')');
+                        grad.addColorStop(1, 'rgba(255,255,255,0)');
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                        ctx.fillStyle = grad;
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // --- HORIZON LINE ---
+            const hGrad = ctx.createLinearGradient(0, h * (HORIZON - 0.03), 0, h * (HORIZON + 0.05));
+            hGrad.addColorStop(0, 'rgba(15, 76, 129, 0)');
+            hGrad.addColorStop(0.4, 'rgba(15, 76, 129, 0.06)');
+            hGrad.addColorStop(0.6, 'rgba(40, 140, 65, 0.05)');
+            hGrad.addColorStop(1, 'rgba(40, 140, 65, 0)');
+            ctx.fillStyle = hGrad;
+            ctx.fillRect(0, h * (HORIZON - 0.03), w, h * 0.08);
+
             requestAnimationFrame(draw);
         }
 
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', function() {
+            resize();
+            initClouds();
+        });
         resize();
+        initClouds();
         requestAnimationFrame(draw);
     })();
     </script>
