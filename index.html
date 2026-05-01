@@ -51,6 +51,7 @@
     </footer>
 
     <canvas id="world"></canvas>
+    <canvas id="aurora"></canvas>
     <script>
     (function() {
         const canvas = document.getElementById('world');
@@ -121,6 +122,10 @@
         }
 
         function draw(t) {
+            if (window.innerWidth <= 600) {
+                requestAnimationFrame(draw);
+                return;
+            }
             ctx.clearRect(0, 0, w, h);
             const time = t * 0.001;
 
@@ -267,13 +272,90 @@
             requestAnimationFrame(draw);
         }
 
-        window.addEventListener('resize', function() {
+        // --- AURORA (mobile) ---
+        const auroraCanvas = document.getElementById('aurora');
+        const actx = auroraCanvas.getContext('2d');
+        let aw, ah;
+
+        const AURORA_LAYERS = [
+            { color: [15, 76, 129],  alpha: 0.12, speed: 0.8,  freq: 0.003, amp: 0.18, yBase: 0.25 },
+            { color: [30, 100, 160], alpha: 0.10, speed: 0.6,  freq: 0.004, amp: 0.15, yBase: 0.35 },
+            { color: [60, 140, 200], alpha: 0.08, speed: 1.0,  freq: 0.0025,amp: 0.20, yBase: 0.30 },
+            { color: [20, 60, 110],  alpha: 0.10, speed: 0.5,  freq: 0.005, amp: 0.12, yBase: 0.45 },
+            { color: [80, 170, 220], alpha: 0.06, speed: 0.7,  freq: 0.0035,amp: 0.16, yBase: 0.40 },
+        ];
+
+        function auroraResize() {
+            aw = auroraCanvas.width = window.innerWidth;
+            ah = auroraCanvas.height = window.innerHeight;
+        }
+
+        function drawAurora(t) {
+            if (window.innerWidth > 600) {
+                requestAnimationFrame(drawAurora);
+                return;
+            }
+            actx.clearRect(0, 0, aw, ah);
+            const time = t * 0.001;
+
+            for (const layer of AURORA_LAYERS) {
+                const steps = Math.ceil(aw / 4);
+                const bandHeight = ah * 0.35;
+
+                actx.beginPath();
+                actx.moveTo(0, ah);
+
+                for (let i = 0; i <= steps; i++) {
+                    const x = (i / steps) * aw;
+                    const nx = x * layer.freq;
+                    const wave = Math.sin(nx + time * layer.speed) * 0.4
+                               + Math.sin(nx * 2.3 + time * layer.speed * 0.7) * 0.3
+                               + Math.sin(nx * 0.7 + time * layer.speed * 1.3) * 0.3;
+                    actx.lineTo(x, ah * layer.yBase + wave * ah * layer.amp);
+                }
+
+                actx.lineTo(aw, ah);
+                actx.closePath();
+
+                const grad = actx.createLinearGradient(0, ah * layer.yBase - bandHeight * 0.3, 0, ah * layer.yBase + bandHeight);
+                const c = layer.color.join(',');
+                const shimmer = 1 + Math.sin(time * 1.5 + layer.yBase * 20) * 0.3;
+                const a = layer.alpha * shimmer;
+
+                grad.addColorStop(0, 'rgba(' + c + ', 0)');
+                grad.addColorStop(0.3, 'rgba(' + c + ',' + a + ')');
+                grad.addColorStop(0.6, 'rgba(' + c + ',' + (a * 0.7) + ')');
+                grad.addColorStop(1, 'rgba(' + c + ', 0)');
+
+                actx.fillStyle = grad;
+                actx.fill();
+            }
+
+            requestAnimationFrame(drawAurora);
+        }
+
+        // --- SWITCHING ---
+        let isMobile = window.innerWidth <= 600;
+
+        function updateCanvases() {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 600;
+            canvas.style.display = isMobile ? 'none' : 'block';
+            auroraCanvas.style.display = isMobile ? 'block' : 'none';
             resize();
+            auroraResize();
+            if (!wasMobile && isMobile) initClouds();
+        }
+
+        window.addEventListener('resize', function() {
+            updateCanvases();
             initClouds();
         });
-        resize();
+
+        updateCanvases();
         initClouds();
         requestAnimationFrame(draw);
+        requestAnimationFrame(drawAurora);
     })();
     </script>
 </body>
