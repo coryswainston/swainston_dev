@@ -152,6 +152,11 @@ body > *:not(#world):not(#aurora):not(script) {
   color: #8a6d20;
 }
 
+.badge.beta {
+  background: #dce8f5;
+  color: #0F4C81;
+}
+
 .app-card .links {
   margin-top: 16px;
   display: flex;

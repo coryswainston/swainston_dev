@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playing Time: Easy Rotations - Data Deletion</title>
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <div class="page">
+        <a class="back" href="../../index.html">&larr; Back</a>
+        <h1>Request Data Deletion</h1>
+        <p class="subtitle">Playing Time: Easy Rotations</p>
+
+        <p>If you would like to request the deletion of your data associated with Playing Time: Easy Rotations, please submit the form below or email us directly. We will process your request within 30 days.</p>
+
+        <form class="support-form" action="https://formspree.io/f/xojyglbp" method="POST">
+            <input type="hidden" name="app" value="Playing Time: Easy Rotations">
+            <input type="hidden" name="type" value="Data Deletion Request">
+
+            <label for="email">Your email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+
+            <label for="message">Additional details (optional)</label>
+            <textarea id="message" name="message" rows="4" placeholder="Any additional information to help us locate your data..."></textarea>
+
+            <button type="submit">Submit Deletion Request</button>
+        </form>
+
+        <div id="success-message" class="success-message" hidden>
+            <p>Your data deletion request has been received. We'll process it within 30 days.</p>
+        </div>
+
+        <p class="support-alt">You can also email us directly at <a href="mailto:cory@swainston.dev">cory@swainston.dev</a>.</p>
+    </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json' } });
+            if (res.ok) {
+                form.hidden = true;
+                document.getElementById('success-message').hidden = false;
+            }
+        });
+    </script>
+</body>
+</html>

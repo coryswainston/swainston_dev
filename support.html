@@ -32,6 +32,8 @@
             <p>Thanks for reaching out! We'll get back to you as soon as possible.</p>
         </div>
 
+        <p id="deletion-link" class="support-alt" hidden>Need to delete your data? <a id="deletion-url" href="">Request data deletion</a>.</p>
+
         <p class="support-alt">You can also email us directly at <a href="mailto:cory@swainston.dev">cory@swainston.dev</a>.</p>
     </div>
 
@@ -39,11 +41,18 @@
         const apps = {
             'playing-time': {
                 name: 'Playing Time: Easy Rotations',
-                icon: 'assets/playing-time-icon.png'
+                icon: 'assets/playing-time-icon.png',
+                deletionUrl: 'apps/playing-time/data-deletion.html'
             },
             'blackjack': {
                 name: 'Blackjack + Card Counting',
-                icon: 'assets/blackjack-icon.png'
+                icon: 'assets/blackjack-icon.png',
+                deletionUrl: 'apps/blackjack/data-deletion.html'
+            },
+            'patio': {
+                name: 'Patio',
+                icon: 'assets/patio-icon.jpg',
+                deletionUrl: 'apps/patio/data-deletion.html'
             }
         };
 
@@ -57,6 +66,10 @@
             document.getElementById('app-name').textContent = app.name;
             document.getElementById('app-field').value = app.name;
             document.title = app.name + ' - Support';
+            if (app.deletionUrl) {
+                document.getElementById('deletion-link').hidden = false;
+                document.getElementById('deletion-url').href = app.deletionUrl;
+            }
         } else {
             document.getElementById('app-name').textContent = 'Support';
             document.querySelector('.support-header').classList.add('no-icon');
