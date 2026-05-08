@@ -174,15 +174,27 @@ body > *:not(#world):not(#aurora):not(script) {
   text-decoration: underline;
 }
 
+.store-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .store-link {
   display: inline-block;
-  margin-top: 16px;
 }
 
 .store-link img {
   width: auto;
   height: 40px;
   border-radius: 0;
+}
+
+.store-link img[alt="Get it on Google Play"] {
+  height: 58px;
+  margin: -9px 0;
 }
 
 /* Footer */
