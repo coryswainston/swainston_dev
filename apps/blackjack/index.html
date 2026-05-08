@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack + Card Counting</title>
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #f87171;
+            --accent-dim: rgba(248, 113, 113, 0.15);
+            --accent-glow: rgba(248, 113, 113, 0.2);
+            --accent-border: rgba(248, 113, 113, 0.6);
+            --black: #000;
+            --gray-900: #0a0a0a;
+            --gray-800: #171717;
+            --gray-400: #a3a3a3;
+            --white: #fff;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .bg-glow {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+        }
+        .bg-glow::before, .bg-glow::after {
+            content: ''; position: absolute; border-radius: 50%; filter: blur(80px);
+        }
+        .bg-glow::before {
+            width: 600px; height: 600px; top: -15%; left: -10%;
+            background: radial-gradient(circle, rgba(248,113,113,0.25) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+        .bg-glow::after {
+            width: 500px; height: 500px; bottom: -10%; right: -5%;
+            background: radial-gradient(circle, rgba(248,113,113,0.15) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out 4s infinite;
+        }
+
+        .bg-grid {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+        }
+
+        .container {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 2rem; text-align: center;
+        }
+
+        .back {
+            position: absolute; top: 2rem; left: 2rem;
+            color: var(--gray-400); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+            transition: color 0.2s;
+        }
+        .back:hover { color: var(--accent); }
+
+        .brand-icon {
+            width: clamp(140px, 28vw, 220px); height: clamp(140px, 28vw, 220px);
+            border-radius: 22%; object-fit: cover;
+            box-shadow: 0 0 60px rgba(248,113,113,0.15), 0 20px 60px rgba(0,0,0,0.5);
+            animation: fadeInUp 0.8s ease both 0.1s;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800;
+            letter-spacing: -0.02em; line-height: 1.15;
+            animation: fadeInUp 0.8s ease both 0.15s;
+            margin-bottom: 0.75rem;
+        }
+
+        .tagline {
+            font-size: clamp(1rem, 2.2vw, 1.25rem); font-weight: 400;
+            color: var(--gray-400); max-width: 420px; line-height: 1.5;
+            animation: fadeInUp 0.8s ease both 0.2s;
+            margin-bottom: 2.5rem;
+        }
+
+        .features {
+            list-style: none; max-width: 380px; text-align: left; margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease both 0.25s;
+        }
+        .features li {
+            padding: 8px 0; font-size: 0.95rem; color: var(--gray-400);
+            display: flex; align-items: flex-start; gap: 12px; line-height: 1.45;
+        }
+        .features li::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+            background: var(--accent); flex-shrink: 0; margin-top: 8px;
+        }
+
+        .coming-soon {
+            display: inline-block; padding: 10px 28px;
+            background: var(--gray-800); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; font-size: 0.9rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--accent);
+            animation: fadeInUp 0.8s ease both 0.35s;
+            margin-bottom: 3rem;
+        }
+
+        .footer-links {
+            display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+            animation: fadeInUp 0.8s ease both 0.4s;
+        }
+        .footer-links a {
+            color: rgba(255,255,255,0.25); text-decoration: none; font-size: 0.8rem;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: var(--accent); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .back { top: 1rem; left: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+
+    <main class="container">
+        <a class="back" href="../../index.html">&larr; Back</a>
+        <img src="../../assets/blackjack-icon.png" alt="Blackjack + Card Counting" class="brand-icon">
+        <h1>Blackjack + Card Counting</h1>
+        <p class="tagline">Learn to count cards like a pro</p>
+        <span class="coming-soon">Coming Soon</span>
+        <div class="footer-links">
+            <a href="privacy-policy.html">Privacy Policy</a>
+            <a href="data-deletion.html">Data Deletion</a>
+            <a href="../../support.html?app=blackjack">Support</a>
+        </div>
+    </main>
+</body>
+</html>

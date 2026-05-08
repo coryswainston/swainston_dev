@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patio — Stay Connected with Your Family</title>
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #60a5fa;
+            --accent-dim: rgba(96, 165, 250, 0.15);
+            --accent-glow: rgba(96, 165, 250, 0.2);
+            --accent-border: rgba(96, 165, 250, 0.6);
+            --black: #000;
+            --gray-900: #0a0a0a;
+            --gray-800: #171717;
+            --gray-400: #a3a3a3;
+            --white: #fff;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .bg-glow {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+        }
+        .bg-glow::before, .bg-glow::after {
+            content: ''; position: absolute; border-radius: 50%; filter: blur(80px);
+        }
+        .bg-glow::before {
+            width: 600px; height: 600px; top: -15%; left: -10%;
+            background: radial-gradient(circle, rgba(96,165,250,0.25) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+        .bg-glow::after {
+            width: 500px; height: 500px; bottom: -10%; right: -5%;
+            background: radial-gradient(circle, rgba(96,165,250,0.15) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out 4s infinite;
+        }
+
+        .bg-grid {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+        }
+
+        .container {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 2rem; text-align: center;
+        }
+
+        .back {
+            position: absolute; top: 2rem; left: 2rem;
+            color: var(--gray-400); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+            transition: color 0.2s;
+        }
+        .back:hover { color: var(--accent); }
+
+        .brand-icon {
+            width: clamp(140px, 28vw, 220px); height: clamp(140px, 28vw, 220px);
+            border-radius: 22%; object-fit: cover;
+            box-shadow: 0 0 60px rgba(96,165,250,0.15), 0 20px 60px rgba(0,0,0,0.5);
+            animation: fadeInUp 0.8s ease both 0.1s;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800;
+            letter-spacing: -0.02em; line-height: 1.15;
+            animation: fadeInUp 0.8s ease both 0.15s;
+            margin-bottom: 0.75rem;
+        }
+
+        .tagline {
+            font-size: clamp(1rem, 2.2vw, 1.25rem); font-weight: 400;
+            color: var(--gray-400); max-width: 420px; line-height: 1.5;
+            animation: fadeInUp 0.8s ease both 0.2s;
+            margin-bottom: 2.5rem;
+        }
+
+        .features {
+            list-style: none; max-width: 380px; text-align: left; margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease both 0.25s;
+        }
+        .features li {
+            padding: 8px 0; font-size: 0.95rem; color: var(--gray-400);
+            display: flex; align-items: flex-start; gap: 12px; line-height: 1.45;
+        }
+        .features li::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+            background: var(--accent); flex-shrink: 0; margin-top: 8px;
+        }
+
+        .store-buttons {
+            display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+            animation: fadeInUp 0.8s ease both 0.35s;
+            margin-bottom: 3rem;
+        }
+
+        .store-btn {
+            display: inline-flex; align-items: center; gap: 0.75rem;
+            padding: 0.875rem 1.75rem;
+            background: var(--gray-800); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; color: var(--white); text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .store-btn:hover {
+            background: var(--accent-dim); border-color: var(--accent-border);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+        .store-btn:active { transform: translateY(0); }
+        .store-btn svg { width: 28px; height: 28px; fill: var(--white); flex-shrink: 0; }
+        .store-btn .label { display: flex; flex-direction: column; text-align: left; }
+        .store-btn .label-sm {
+            font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--gray-400);
+        }
+        .store-btn .label-lg { font-size: 1.1rem; font-weight: 600; }
+
+        .footer-links {
+            display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+            animation: fadeInUp 0.8s ease both 0.4s;
+        }
+        .footer-links a {
+            color: rgba(255,255,255,0.25); text-decoration: none; font-size: 0.8rem;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: var(--accent); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .store-buttons { flex-direction: column; width: 100%; max-width: 280px; }
+            .store-btn { justify-content: center; }
+            .back { top: 1rem; left: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+
+    <main class="container">
+        <a class="back" href="../../index.html">&larr; Back</a>
+        <img src="../../assets/patio-icon.jpg" alt="Patio" class="brand-icon">
+        <h1>Patio</h1>
+        <p class="tagline">Stay connected with your family</p>
+        <div class="store-buttons">
+            <a href="https://play.google.com/store/apps/details?id=dev.swainston.family" class="store-btn" aria-label="Get it on Google Play">
+                <svg viewBox="0 0 24 24"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.302 2.302a1 1 0 0 1 0 1.38l-2.302 2.302L15.396 12l2.302-2.492zM5.864 2.658L16.8 9.49l-2.302 2.302L5.864 2.658z"/></svg>
+                <div class="label"><span class="label-sm">Get it on</span><span class="label-lg">Google Play</span></div>
+            </a>
+            <a href="https://testflight.apple.com/join/vWeJwrvN" class="store-btn" aria-label="Join the iOS TestFlight Beta">
+                <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                <div class="label"><span class="label-sm">Join the iOS</span><span class="label-lg">TestFlight Beta</span></div>
+            </a>
+        </div>
+        <div class="footer-links">
+            <a href="privacy-policy.html">Privacy Policy</a>
+            <a href="data-deletion.html">Data Deletion</a>
+            <a href="csae-standards.html">CSAE Standards</a>
+            <a href="../../support.html?app=patio">Support</a>
+        </div>
+    </main>
+</body>
+</html>
