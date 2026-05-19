@@ -109,6 +109,34 @@
             background: var(--accent); flex-shrink: 0; margin-top: 8px;
         }
 
+        .invite-code {
+            display: none;
+            background: var(--accent-dim); border: 1px solid var(--accent-border);
+            border-radius: 14px; padding: 1.25rem 1.75rem;
+            max-width: 380px; width: 100%; cursor: pointer;
+            animation: fadeInUp 0.8s ease both 0.3s;
+            margin-bottom: 2rem; text-align: center;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .invite-code:hover {
+            background: rgba(96, 165, 250, 0.25);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+        .invite-code:active { transform: scale(0.98); }
+        .invite-code.visible { display: block; }
+        .invite-code p {
+            font-size: 0.85rem; color: var(--gray-400); margin-bottom: 0.5rem;
+        }
+        .invite-code .code {
+            font-size: 1.75rem; font-weight: 700; letter-spacing: 0.08em;
+            color: var(--accent);
+        }
+        .invite-code .tap-hint {
+            font-size: 0.75rem; color: var(--gray-400); margin-top: 0.5rem;
+            transition: color 0.2s;
+        }
+        .invite-code .tap-hint.copied { color: var(--accent); }
+
         .store-buttons {
             display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
             animation: fadeInUp 0.8s ease both 0.35s;
@@ -171,6 +199,11 @@
         <img src="../../assets/patio-icon.jpg" alt="Patio" class="brand-icon">
         <h1>Patio</h1>
         <p class="tagline">Stay connected with your family</p>
+        <div id="invite-code" class="invite-code" onclick="copyInviteCode()">
+            <p>Use this invite code to join your family:</p>
+            <span class="code" id="invite-code-text"></span>
+            <div class="tap-hint" id="invite-hint">Tap to copy</div>
+        </div>
         <div class="store-buttons">
             <a href="https://play.google.com/store/apps/details?id=dev.swainston.family" class="store-btn" aria-label="Get it on Google Play">
                 <svg viewBox="0 0 24 24"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.302 2.302a1 1 0 0 1 0 1.38l-2.302 2.302L15.396 12l2.302-2.492zM5.864 2.658L16.8 9.49l-2.302 2.302L5.864 2.658z"/></svg>
@@ -189,5 +222,27 @@
             <a href="../../support.html?app=patio">Support</a>
         </div>
     </main>
+    <script>
+        (function() {
+            var code = new URLSearchParams(window.location.search).get('inviteCode');
+            if (code) {
+                document.getElementById('invite-code-text').textContent = code;
+                document.getElementById('invite-code').classList.add('visible');
+            }
+        })();
+
+        function copyInviteCode() {
+            var code = document.getElementById('invite-code-text').textContent;
+            navigator.clipboard.writeText(code).then(function() {
+                var hint = document.getElementById('invite-hint');
+                hint.textContent = 'Copied!';
+                hint.classList.add('copied');
+                setTimeout(function() {
+                    hint.textContent = 'Tap to copy';
+                    hint.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
